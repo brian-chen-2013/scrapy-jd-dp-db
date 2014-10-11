@@ -1,0 +1,31 @@
+本项目分析scrapy的执行流程
+
+
+安装
+
+1. 安装虚拟环境pip install virtualenv
+2. 创建目录scrapy-test
+3. 'cd scrapy-test'
+4. 'virtualenv scrapy'
+5. './scrapy/bin/pip install scrapy -i http://pypi.douban.com/simple/'
+6. 在安装过程中，会编译安装其他的python包，如果遇到异常退出，需要检查log，然后把所缺少的dev包手工安装，然后再重新安装。
+
+
+运行
+
+1. 'cd scrapy-test'
+2. 创建项目spider项目app，'./scrapy/bin/scrapy startproject app'
+3. 创建大众点评的抓取spider，'cd app； ../scrapy/bin/scrapy genspider dp_spider dianping.com'，代码在app/app/spiders/dp_spider.py
+4. dp_spider抓取大众点评网的上海的总评论数最多的750家餐厅shopid和店名。可以自行扩展抓取地址，电话，特色菜，风格，环境等其他参数，也可以扩展到抓取上海所有餐厅的上述信息。
+5. 运行: 在scrapy-test/app目录下执行'../scrapy/bin/scrapy crawl dp_spider'，只抓取两个页面。如果遇到403错误，是大众点评临时禁止抓取，通常是抓取频率太高导致的，只要暂停十分钟再重新抓取即可。
+6. 在app/app/spiders目录下，也写了京东数据抓取，豆瓣数据抓取的spider，使用方式与大众点评网spider相同。其中，京东spider使用了低版本的scrapy代码，仅作演示用。
+7. 豆瓣spider抓取用户信息和关注关系。
+8. 京东spider抓取京东北京出售手机sku等信息。
+
+
+执行流程：
+1. ../scrapy/bin/scrapy是scrapy的执行入口，它是一个py文件，代码很简单，实际上，它执行得的是execute()函数。
+2. execture函数，读取配置，读取要执行的命令，执行，然后返回结果。cmds是一个字典，记录了诸如'runspider', 'crawl'等命令对应得cmd对象。
+3. cmd对象在_run_command函数被执行。最终调用的是cmd.run()函数。
+4. cmd对象crawl对应的类是scrapy.commands.crawl.Command，在它的run函数，在run函数，创建crawler，它对应的类是是scrapy.crawler.Crawler，它根据传入得spider名字，创建spider对象， spider的类是DpSpiderSpider，这个是我们写的代码创建的。
+5. 执行crawler_process.start()，进行抓取，主要是crawler.start(), reactor.run()。
